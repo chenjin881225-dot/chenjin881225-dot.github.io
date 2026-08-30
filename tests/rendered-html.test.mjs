@@ -1,0 +1,421 @@
+import assert from "node:assert/strict";
+import { access, readFile } from "node:fs/promises";
+import test from "node:test";
+
+async function render() {
+  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
+  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
+  const { default: worker } = await import(workerUrl.href);
+
+  return worker.fetch(
+    new Request("http://localhost/", { headers: { accept: "text/html" } }),
+    { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
+    { waitUntil() {}, passThroughOnException() {} },
+  );
+}
+
+test("server-renders the compact creative work navigator", async () => {
+  const response = await render();
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
+
+  const html = await response.text();
+  assert.match(html, /<html lang="zh-CN">/);
+  assert.match(html, /<title>CHEN — Creative Work Index<\/title>/);
+  assert.match(html, /科技 AI 产品/);
+  assert.match(html, /海外科技品牌/);
+  assert.match(html, /原创 IP 资产/);
+  assert.match(html, /品牌整合创新/);
+  assert.match(html, /创业与审美进化/);
+  assert.match(html, /绝味品牌重构/);
+  assert.match(html, /ENTER CASE/);
+  assert.match(html, /示意视觉/);
+  assert.match(html, /ENTER 进入作品集/);
+  assert.match(html, /AI CREATIVE DIRECTOR \/ DESIGN MANAGER/);
+  assert.match(html, /Creative software and AI skills/);
+  assert.match(html, /2011—2026/);
+  assert.match(html, /进入陈琎作品集/);
+  assert.match(html, /mailto:chenjin881225@gmail\.com/);
+  assert.match(html, /og-reference\.png/);
+});
+
+test("keeps the case player, accessibility, and assets wired", async () => {
+  const [page, css, workItems, syncScript, projectCopy] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/work-items.generated.json", import.meta.url), "utf8"),
+    readFile(new URL("../scripts/sync_portfolio_materials.py", import.meta.url), "utf8"),
+    readFile(new URL("../app/project-copy.ts", import.meta.url), "utf8"),
+  ]);
+  const workItemData = JSON.parse(workItems);
+
+  assert.deepEqual(workItemData.ace.map(({ title }) => title), ["AIGC 商业化落地", "数字影像设计"]);
+  assert.deepEqual(workItemData.ace[1].images, []);
+  assert.equal(workItemData.ace[1].videos.length, 2);
+  assert.deepEqual(workItemData.emoof.map(({ title }) => title), ["品牌视觉设计", "多元产品设计", "数字影像设计"]);
+  assert.deepEqual(workItemData.cloner.map(({ title }) => title), ["IP角色设定", "角色视觉设计", "ip衍生产品", "数字影像设计"]);
+  assert.deepEqual(workItemData.juewei.map(({ title }) => title), ["门店营销活动物料", "涅槃调改店", "艺人合作", "品牌视觉系统"]);
+  assert.deepEqual(workItemData.aigc.map(({ title }) => title), ["AIGC 视频", "AI 赋能设计"]);
+  assert.deepEqual(workItemData.fyra.map(({ title }) => title), ["角色形象设定", "商业应用延展"]);
+  assert.deepEqual(workItemData.lab.map(({ title }) => title), ["原创品牌运营"]);
+  assert.deepEqual(workItemData["lab-cross"].map(({ title }) => title), ["创新视觉版式", "插画影像实验", "跨界视觉实验", "游戏视觉与场景实验"]);
+  assert.deepEqual(workItemData["lab-ai"].map(({ title }) => title), ["动态视觉测试"]);
+  assert.equal(Object.values(workItemData).flat().length, 23);
+  const disciplineOrder = ["品牌整合创新", "原创 IP 资产", "海外科技品牌", "科技 AI 产品", "创业与审美进化"];
+  assert.deepEqual([...disciplineOrder].sort((a, b) => page.indexOf(a) - page.indexOf(b)), disciplineOrder);
+  assert.match(page, /useState\("system"\)/);
+  assert.match(page, /useState\("juewei"\)/);
+  assert.match(page, /projectIds: \["lab", "lab-cross", "lab-ai"\]/);
+  assert.match(page, /title: "创新审美与跨界视觉"/);
+  assert.match(page, /title: "AI 视觉探索"/);
+  assert.match(page, /items: labBrandItems/);
+  assert.match(page, /items: labCrossItems/);
+  assert.match(page, /items: labAiItems/);
+  assert.match(syncScript, /01_品牌整合创新\/02_绝味品牌重构/);
+  assert.match(syncScript, /02_原创IP资产\/02_IP角色设定/);
+  assert.match(syncScript, /03_海外科技品牌\/02_品牌视觉设计/);
+  assert.match(syncScript, /04_科技AI产品\/02_AIGC商业化落地/);
+  assert.match(syncScript, /05_创业与审美进化\/03_创新审美与跨界视觉/);
+  assert.match(syncScript, /mp4_is_faststart/);
+  assert.match(syncScript, /"-c", "copy", "-movflags", "\+faststart"/);
+  assert.match(syncScript, /游戏视觉与场景实验/);
+  assert.match(syncScript, /"optional_items": \{4\}/);
+  assert.match(syncScript, /elif not video_sources/);
+  assert.match(syncScript, /stale_primary\.unlink\(\)/);
+
+  assert.equal((page.match(/slides: makeSlides\(/g) ?? []).length, 9);
+  assert.match(page, /Array\.from\(\{ length: itemCount \}/);
+  assert.doesNotMatch(page, /templates\.slice\(0, itemCount\)/);
+  assert.equal((page.match(/openProject\.slides\.length/g) ?? []).length, 2);
+  assert.match(page, /role="dialog"/);
+  assert.match(page, /aria-modal="true"/);
+  assert.match(page, /event\.key === "Escape"/);
+  assert.match(page, /event\.key === "ArrowRight"/);
+  assert.match(page, /event\.key === "ArrowLeft"/);
+  assert.match(page, /setIntroLeaving\(true\)/);
+  assert.equal((page.match(/setIntroVisible\(false\)/g) ?? []).length, 1);
+  assert.match(page, /Keep the cover visible on initial deep links/);
+  assert.match(page, /pendingDeepLinkProjectRef\.current = project\.id/);
+  assert.doesNotMatch(page, /chooseDisciplineOnHover/);
+  assert.doesNotMatch(page, /onPointerEnter=\{\(\) => chooseDiscipline\(item\)\}/);
+  assert.match(page, /intro-tools-repair/);
+  assert.match(page, /tool-sd/);
+  assert.match(page, /tool-capcut/);
+  assert.match(page, /gearhead-kevin-macleod\.mp3/);
+  assert.match(page, /video-original-track\.m4a/);
+  assert.match(page, /ORIGINAL VIDEO TRACK/);
+  assert.match(page, /dd-groove-kevin-macleod\.mp3/);
+  assert.match(page, /bummin-on-tremelo-kevin-macleod\.mp3/);
+  assert.match(page, /onEnded=\{playNextTrack\}/);
+  assert.match(page, /autoPlay/);
+  assert.match(page, /startAudio/);
+  assert.match(page, /pointerdown/);
+  assert.match(page, /audio\.pause\(\)/);
+  assert.match(page, /audio\.play\(\)/);
+  assert.match(page, /sound-orbit/);
+  assert.match(page, /GEARHEAD/);
+  assert.match(page, /DD GROOVE/);
+  assert.match(page, /BUMMIN ON TREMELO/);
+  assert.match(page, /KEVIN MACLEOD/);
+  assert.match(page, /--char-angle/);
+  assert.match(page, /\.repeat\(2\)/);
+  assert.match(page, /SELF-INTRODUCTION/);
+  assert.doesNotMatch(page, /introSkills\.map/);
+  assert.match(page, /intro-subject-layer/);
+  assert.doesNotMatch(page, /intro-light-mask/);
+  assert.match(page, /除真实头像外，本作品集中的多维跨界形象系结合个人经历/);
+  assert.match(page, /getContext\("2d"\)/);
+  assert.doesNotMatch(page, /IntroContourMap/);
+  assert.doesNotMatch(page, /intro-contours/);
+  assert.doesNotMatch(page, /intro-grid/);
+  assert.match(css, /\.intro-backdrop \{[^}]*background:\s*#151719/);
+  assert.match(css, /\.intro-backdrop > img \{[^}]*filter:\s*none/);
+  assert.match(css, /\.intro-backdrop::before, \.intro-backdrop::after \{[^}]*display:\s*none/);
+  assert.match(css, /\.intro-subject-layer\s*\{[^}]*mask-image:[^}]*mask-repeat:\s*no-repeat/);
+  assert.doesNotMatch(css, /\.intro-left-cleaner\s*\{/);
+  assert.doesNotMatch(css, /\.intro-contours\s*\{/);
+  assert.doesNotMatch(css, /\.intro-grid\s*\{/);
+  assert.match(page, /intro-cover-default-final-v2-lossless\.webp/);
+  assert.match(page, /loading="eager" fetchPriority="high"/);
+  assert.match(css, /\.intro-profile-cover \.enter-button:focus-visible \{[^}]*outline:\s*none/);
+  assert.match(css, /\.intro-tools-repair \{[^}]*left:\s*calc\(50vw - 54\.3vh\)[^}]*top:\s*83vh/);
+  assert.match(css, /\.intro-tool-tile \{[^}]*overflow:\s*hidden[^}]*border:/);
+  assert.match(css, /\.gemini-mark/);
+  assert.match(css, /\.mj-wave/);
+  assert.doesNotMatch(page, /intro-cover-lit-compact-fixed\.png/);
+  assert.match(page, /--intro-px/);
+  assert.doesNotMatch(page, /intro-scan/);
+  assert.doesNotMatch(page, /OPEN TO DESIGN MANAGEMENT/);
+  assert.match(page, /document\.body\.style\.overflow = overlayOpen \? "hidden" : ""/);
+  assert.match(page, /new URLSearchParams\(window\.location\.search\)/);
+  assert.match(page, /window\.history\.replaceState/);
+  assert.match(page, /window\.addEventListener\("popstate"/);
+  assert.match(page, /event\.key === "Tab"/);
+  assert.match(page, /lastFocusedRef\.current\?\.focus/);
+  assert.match(page, /playerDialogRef/);
+  assert.match(page, /infoDialogRef/);
+  assert.doesNotMatch(page, /chen-lite-mode|liteMode|lite-toggle|>LITE</);
+  assert.match(page, /autoRotate\s*\/>/);
+  assert.match(css, /--type-body:\s*16px/);
+  assert.doesNotMatch(css, /\.compact-site\.is-lite|\.lite-toggle/);
+  assert.match(css, /@media \(min-width:\s*1051px\) and \(max-width:\s*1400px\)/);
+  assert.match(page, /layout: "cover"/);
+  assert.match(page, /layout: "outcome"/);
+  assert.match(page, /chapterCopyByProject/);
+  assert.match(page, /mediaCaptionBySource/);
+  assert.match(page, /activeMediaDescription/);
+  assert.match(projectCopy, /OGBRO 秋叶原店/);
+  assert.match(projectCopy, /ICE WORLD 手机壳/);
+  assert.doesNotMatch(workItems, /AI辅助设计/);
+  assert.match(projectCopy, /让 AI 相机先讲清体验/);
+  assert.match(projectCopy, /让门店物料同时服务品牌与转化/);
+  assert.match(projectCopy, /让世界观真正动起来/);
+  assert.match(projectCopy, /让美术服务玩法与空间叙事/);
+  assert.match(projectCopy, /8 组动态视觉实验样本/);
+  assert.doesNotMatch(page, /项目是什么|核心设计判断|系统如何成立|设计产生什么价值/);
+  assert.match(page, /project-insight/);
+  assert.match(page, /className="insight-core"/);
+  assert.match(page, /case-sound-control/);
+  assert.match(page, /暂停背景音乐/);
+  assert.match(css, /\.insight-core \{[^}]*margin:\s*auto 0/);
+  assert.match(css, /\.case-sound-control \{[^}]*grid-template-columns:\s*18px auto/);
+  assert.match(page, /contact-details/);
+  assert.match(page, /contact-cta/);
+  assert.match(page, /JOHNCH2023/);
+  assert.match(page, /返回作品集首页/);
+  assert.match(page, /openProject\.items\[index\]/);
+  assert.match(page, /setFocusIndex\(0\)/);
+  assert.match(page, /const activeItem = openProject\?\.items\[slideIndex\]/);
+  assert.match(page, /const activeMediaCount = \(activeItem\?\.images\.length/);
+  assert.match(workItems, /门店营销活动物料/);
+  assert.match(workItems, /涅槃调改店/);
+  assert.match(workItems, /"images": \[/);
+  assert.match(workItems, /"videos": \[/);
+  assert.match(workItems, /\/works\/aigc\/item-01-video-01\.mp4/);
+  assert.match(workItems, /艺人合作/);
+  assert.doesNotMatch(page, /focusIndex % panelContent\.items\.length === index/);
+  assert.match(page, /CONTENT \/ 内容主题/);
+  assert.match(page, /MEDIA \/ 素材类型/);
+  assert.match(page, /POSITION \/ 当前素材/);
+  assert.match(page, /第 \$\{activeMediaIndex \+ 1\} 项 · 共 \$\{activeMediaCount\} 项/);
+  assert.match(page, /CURRENT VIEW/);
+  assert.match(page, /item=\{activeItem \?\? openProject\.items\[0\]\}/);
+  assert.match(page, /\.\.\.item\.images\.map/);
+  assert.match(page, /\.\.\.item\.videos\.map/);
+  assert.match(page, /const assets = \[\s*\.\.\.item\.videos\.map[\s\S]*\.\.\.item\.images\.map/);
+  assert.match(page, /if \(index !== focusIndex\)/);
+  assert.match(page, /<video/);
+  assert.match(page, /playsInline/);
+  assert.doesNotMatch(page, /preload="auto"/);
+  assert.match(page, /preload="none"/);
+  assert.match(page, /preload="metadata"/);
+  assert.match(page, /poster=\{asset\.poster\}/);
+  assert.match(page, /poster: posterForVideo\(src\)/);
+  assert.match(page, /preload=\{position === "current" \? "metadata" : "none"\}/);
+  assert.doesNotMatch(page, /<video[^>]*\scontrols(?:\s|=|>)/);
+  assert.match(page, /className="video-toggle"/);
+  assert.match(page, /loadingVideoSrc === asset\.src \? "视频加载中"/);
+  assert.match(page, /onWaiting=\{\(\) => setLoadingVideoSrc\(asset\.src\)\}/);
+  assert.match(page, /homeAssetsEnabled && item\.id === disciplineId/);
+  assert.match(page, /warmDisciplineAssets/);
+  assert.match(css, /video-buffer-spin/);
+  assert.match(page, /onVideoPlaybackChange\(true\)/);
+  assert.match(page, /onVideoPlaybackChange\(false\)/);
+  assert.match(page, /resumeMusicAfterVideoRef/);
+  assert.match(page, /audio\?\.pause\(\)/);
+  assert.match(page, /disabled=\{videoPlaying\}/);
+  assert.match(page, /video\.videoHeight > video\.videoWidth/);
+  assert.match(page, /orientation-\$\{resolvedOrientation\}/);
+  assert.match(page, /assetAspectRatios/);
+  assert.match(page, /--asset-ratio/);
+  assert.match(page, /image\.naturalWidth \/ image\.naturalHeight/);
+  assert.doesNotMatch(page, /CHEN<span>/);
+  assert.doesNotMatch(page, /AI CREATIVE DIRECTOR <i \/> BRAND VISUAL SYSTEM BUILDER/);
+  assert.doesNotMatch(page, /MUSIC: 3-TRACK ROCK LOOP/);
+  assert.match(page, /我是陈琎/);
+  assert.match(page, /const shouldLoadAsset = position !== "hidden"/);
+  assert.match(page, /src=\{shouldLoadAsset \? asset\.src : undefined\}/);
+  assert.match(page, /loading=\{position === "current" \? "eager" : "lazy"\}/);
+  assert.match(page, /fetchPriority=\{position === "current" \? "high" : "low"\}/);
+  assert.match(page, /video\.videoWidth \/ video\.videoHeight/);
+  assert.match(page, /image\.naturalHeight > image\.naturalWidth/);
+  assert.doesNotMatch(page, /carousel-placeholder/);
+  assert.match(page, /window\.setInterval/);
+  assert.match(page, /上一项当前项目内容/);
+  assert.match(page, /下一项当前项目内容/);
+  assert.doesNotMatch(page, /上一张当前项目内容/);
+  assert.doesNotMatch(page, /下一张当前项目内容/);
+  assert.match(page, /使用 ← → 键切换当前项目内容/);
+  assert.match(syncScript, /E:\\CHEN网站作品素材/);
+  assert.doesNotMatch(syncScript, /首页分类背景/);
+  assert.match(syncScript, /PROJECT VIDEO/);
+  assert.match(syncScript, /PROJECT POSTER/);
+  assert.match(syncScript, /sync_video_poster/);
+  assert.match(syncScript, /"-frames:v", "1"/);
+  assert.doesNotMatch(syncScript, /项目视频_暂存|video_item|sync_videos/);
+  assert.match(syncScript, /path for path in folder\.rglob\("\*"\)/);
+  assert.match(syncScript, /MAX_DEPLOYABLE_VIDEO_BYTES = 11 \* 1024 \* 1024/);
+  assert.match(syncScript, /TARGET_VIDEO_BYTES = 10 \* 1024 \* 1024/);
+  assert.match(syncScript, /libx264/);
+  assert.match(syncScript, /"\+faststart"/);
+  assert.match(syncScript, /return "cached", target\.stat\(\)\.st_size/);
+  assert.doesNotMatch(page, /<b>\{String\(focusIndex \+ 1\)/);
+  assert.match(css, /grid-template-columns:\s*repeat\(2,\s*52px\)/);
+  assert.match(css, /\.project-insight/);
+  assert.match(css, /\.demo-composition\.focus-0/);
+  assert.match(css, /\.demo-carousel/);
+  assert.match(css, /\.carousel-media > img \{[^}]*width:\s*100%[^}]*height:\s*100%[^}]*object-fit:\s*contain[^}]*border:\s*0/);
+  assert.match(css, /\.carousel-video > video \{[^}]*width:\s*100%[^}]*height:\s*100%[^}]*object-fit:\s*contain[^}]*border:\s*0/);
+  assert.match(css, /\.carousel-slide\.orientation-portrait \{[^}]*width:\s*auto[^}]*height:\s*86%[^}]*aspect-ratio:\s*16\s*\/\s*9/);
+  assert.match(css, /\.carousel-video\.is-paused::after \{[^}]*opacity:\s*1/);
+  assert.match(css, /\.video-toggle \{[^}]*left:\s*50%[^}]*top:\s*50%/);
+  assert.match(css, /\.carousel-slide\.is-current:hover \{[^}]*translate\(-50%,\s*-50%\)[^}]*\}/);
+  assert.doesNotMatch(css, /\.carousel-slide\.is-current:hover \{[^}]*scale\(/);
+  assert.match(css, /grid-template-rows:\s*auto\s+minmax\(310px,\s*1fr\)\s+auto/);
+  assert.match(css, /prefers-reduced-motion:\s*reduce/);
+  assert.match(css, /@media \(max-width:\s*1050px\)/);
+  assert.match(css, /@media \(max-width:\s*580px\)/);
+  assert.match(css, /aspect-ratio:\s*16\s*\/\s*9/);
+  assert.match(page, /home-video-preview/);
+  assert.match(page, /discipline\.projectIds[\s\S]*\.flatMap\(\(item\) => item\.videos\.map/);
+  assert.match(page, /setHomePreviewIndex\(\(current\) => \(current \+ 1\) % homePreviewPlaylist\.length\)/);
+  assert.match(page, /onEnded=\{\(event\) => advanceHomePreview\(event\.currentTarget\)\}/);
+  assert.match(page, /homePreviewPlaylist\.length > 1/);
+  assert.match(page, /src=\{homeAssetsEnabled \? featuredPreview\.src : undefined\}/);
+  assert.match(page, /poster=\{posterForVideo\(featuredPreview\.src\)\}/);
+  assert.match(page, /muted/);
+  assert.doesNotMatch(page, /currentTime\s*>=\s*10/);
+  assert.doesNotMatch(page, /onTimeUpdate=/);
+  assert.doesNotMatch(page, /toggleHomePreview|disabled=\{!featuredPreview\}/);
+  assert.match(page, /featuredPreview\?\.title \?\? "待上传视频"/);
+  assert.doesNotMatch(page, /src="\/home-preview\.mp4"/);
+  assert.match(page, /disablePictureInPicture/);
+  assert.match(page, /controlsList="nofullscreen nodownload noremoteplayback"/);
+  assert.doesNotMatch(page, /<video[^>]*\scontrols(?:\s|=|>)/);
+  assert.match(page, /homePreviewRef\.current\?\.pause/);
+  assert.match(page, /className="chapter-period"/);
+  assert.match(css, /\.project-ribbon\.is-collection[^{]*\{[^}]*flex-direction:\s*column/);
+  assert.match(css, /\.home-video-preview\.is-empty/);
+  assert.match(css, /\.home-video-empty \{[^}]*background:\s*#020202/);
+  assert.match(css, /\.sound-orbit \{[^}]*width:\s*clamp\(148px,\s*6\.8vw,\s*174px\)/);
+  assert.match(css, /\.impact-title span \{[^}]*font-size:\s*clamp\(142px,\s*11\.3vw,\s*232px\)/);
+  assert.match(css, /\.hero-art > img \{[^}]*object-fit:\s*contain/);
+  assert.match(css, /Case editorial redesign: a larger, full-width viewing hierarchy/);
+  assert.match(css, /\.player-main \{ grid-template-columns: 166px minmax\(0, 1fr\) clamp\(420px, 18vw, 460px\)/);
+  assert.match(css, /\.slide-copy \{ width: min\(80%, 980px\); min-height: 100px;/);
+  assert.match(css, /\.slide-copy h2 \{ margin-top: 16px; font-size: clamp\(38px, 2vw, 46px\)/);
+  assert.match(css, /\.carousel-slide\.orientation-landscape,[\s\S]*?\.carousel-slide\.orientation-portrait \{ width: auto; height: 100%; max-width: 100%; max-height: 100%; aspect-ratio: 16 \/ 9; \}/);
+  assert.match(css, /\.carousel-media > img,[\s\S]*?object-fit: contain; image-rendering: auto/);
+  assert.match(css, /\.carousel-controls \{[\s\S]*?left: 27%;[\s\S]*?right: 27%;[\s\S]*?bottom: -94px/);
+  assert.match(css, /\.stage-caption \{ width: min\(42%, 660px\)/);
+  assert.match(css, /\.insight-core > header b \{ font-size: 60px/);
+  assert.match(page, /mirror-stage/);
+  assert.match(page, /home-silhouette/);
+  assert.match(page, /function StarfieldAtmosphere/);
+  assert.match(page, /<StarfieldAtmosphere \/>/);
+  assert.match(page, /atmosphere-cycle/);
+  assert.match(page, /const stars = Array\.from\(\{ length: 230 \}/);
+  assert.match(page, /const frameInterval = 1000 \/ 24/);
+  assert.match(page, /const drawMeteor/);
+  assert.match(page, /drawMeteor\(seconds, 37/);
+  assert.match(page, /drawMeteor\(seconds, 53/);
+  assert.match(page, /科技 AI 产品/);
+  assert.match(page, /海外科技品牌/);
+  assert.match(page, /原创 IP 资产/);
+  assert.match(page, /品牌整合创新/);
+  assert.match(page, /创业与审美进化/);
+  assert.match(page, /title: "IP角色设定"/);
+  assert.match(page, /title: "品牌超级IP"/);
+  assert.doesNotMatch(workItems, /"title": "AI辅助设计"/);
+  assert.match(workItems, /"title": "ip衍生产品"/);
+  assert.doesNotMatch(page, /title: "IP 角色设定"/);
+  assert.doesNotMatch(page, /title: "品牌超级 IP"/);
+  assert.doesNotMatch(workItems, /"title": "AI 辅助设计"/);
+  assert.doesNotMatch(workItems, /"title": "IP 衍生产品"/);
+  assert.match(page, /id: "lifestyle"[^\n]*projectIds: \["emoof"\]/);
+  assert.doesNotMatch(page, /art-number/);
+  assert.match(page, /reflection-floor/);
+  assert.match(page, /art-reflection/);
+  assert.doesNotMatch(page, /case-platform/);
+  assert.doesNotMatch(page, /case-platform-reflection/);
+  assert.match(page, /carousel-media/);
+  assert.doesNotMatch(page, /echo-card/);
+  assert.match(css, /@keyframes floor-sheen/);
+  assert.match(css, /@keyframes reflection-drift/);
+  assert.match(css, /\.reflection-floor \{[^}]*rotateX\(58deg\)/);
+  assert.match(css, /\.home-silhouette \{[^}]*mix-blend-mode:\s*screen[^}]*mask-image:/);
+  assert.match(page, /cinematic-scenes/);
+  assert.match(page, /src=\{homeAssetsEnabled && item\.id === disciplineId \? item\.scene : undefined\}/);
+  assert.match(page, /const homeAssetsEnabled = introLeaving \|\| !introVisible/);
+  assert.doesNotMatch(page, /product-scene-test/);
+  assert.match(css, /\.cinematic-scenes img\.active \{[^}]*opacity:\s*\.4/);
+  assert.match(css, /\.intro-profile h1 \{[^}]*letter-spacing:\s*\.028em/);
+  assert.match(css, /\.visual-theatre \{[^}]*left:\s*24\.5%[^}]*width:\s*54%/);
+  assert.match(css, /\.atmosphere-cycle \{[^}]*z-index:\s*-1[^}]*opacity:\s*\.64[^}]*mix-blend-mode:\s*screen[^}]*mask-image:/);
+  assert.doesNotMatch(page, /demo-metric/);
+  assert.doesNotMatch(css, /demo-metric/);
+  assert.match(css, /\.art-label \{[^}]*font-family:\s*Arial,[^}]*font-weight:\s*800[^}]*letter-spacing:\s*-\.07em/);
+  assert.match(css, /\.impact-action button \{[^}]*font-family:\s*Arial,[^}]*font-weight:\s*800[^}]*letter-spacing:\s*-\.07em/);
+  assert.match(css, /\.reflection-floor \{[^}]*clip-path:\s*polygon\(9\.68% 0, 90\.32% 0/);
+  assert.match(css, /\.chapter-nav button b em \{[^}]*text-wrap:\s*balance/);
+  assert.doesNotMatch(css, /\.case-platform \{/);
+  assert.match(css, /@keyframes case-light-flow/);
+  assert.match(css, /\.demo-hero \.media-frame \{[^}]*border-color:\s*transparent/);
+  assert.match(css, /\.player-home span \{[^}]*border-right:\s*8px solid var\(--case-accent\)/);
+  assert.match(css, /\.player-home \{[^}]*font-family:\s*Arial,[^}]*font-weight:\s*800[^}]*letter-spacing:\s*-\.07em/);
+  assert.match(css, /\.demo-split \.demo-hero, \.demo-system \.demo-hero, \.demo-outcome \.demo-hero \{[^}]*left:\s*50%[^}]*top:\s*50%[^}]*width:\s*min\(82%, 1020px\)/);
+  assert.match(css, /\.contact-details strong \{[^}]*font-size:\s*clamp\(18px, 1\.55vw, 27px\)/);
+  assert.match(css, /\.info-drawer header \{[^}]*font:\s*11px\/1\.2 monospace/);
+  assert.match(css, /\.about-content > p:first-child, \.contact-content > p \{[^}]*font:\s*12px\/1\.55 monospace/);
+  assert.match(css, /\.about-content h2, \.contact-content h2 \{[^}]*line-height:\s*1\.02/);
+  assert.match(css, /\.about-content > div \{[^}]*font:\s*11px\/1\.6 monospace/);
+  assert.match(css, /\.floating-disciplines button\.active::after \{[^}]*border-left:\s*11px solid var\(--accent\)/);
+  assert.match(css, /\.sound-core \{[^}]*rgb\(var\(--accent-rgb\) \/ 18%\)/);
+  assert.match(css, /\.floating-disciplines button > span, \.floating-disciplines button b \{ font-size:/);
+  assert.match(css, /\.intro-footer \.intro-footer-note \{[^}]*font:\s*13px\/1\.55/);
+  assert.match(css, /\.aside-label \{[^}]*font:\s*12px/);
+  assert.match(css, /\.floating-disciplines button small \{[^}]*font:\s*12px/);
+  assert.match(css, /\.brief-top \{[^}]*font:\s*12px/);
+  assert.match(css, /\.brief-heading > p \{[^}]*font:\s*12px/);
+  assert.match(css, /\.impact-action > p span \{[^}]*font:\s*11px/);
+  assert.match(css, /\.wordmark \{[^}]*font-size:\s*22px/);
+  assert.match(css, /\.topbar nav button \{[^}]*font:\s*12px/);
+  assert.match(css, /\.chapter-nav-heading span \{[^}]*font:\s*11px/);
+  assert.match(css, /\.chapter-nav button span \{[^}]*font:\s*13px/);
+  assert.match(css, /\.chapter-nav button b small \{[^}]*font:\s*11px/);
+  assert.match(css, /\.chapter-nav > p \{[^}]*font:\s*11px/);
+  assert.match(css, /\.stage-caption span \{[^}]*font:\s*11px/);
+  assert.match(css, /\.carousel-media > span \{[^}]*font:\s*11px/);
+  assert.match(css, /\.player-main \{[^}]*clamp\(340px,\s*23\.5vw,\s*450px\)/);
+  assert.match(css, /\.insight-intro p \{[^}]*font-size:\s*16px/);
+  assert.match(css, /\.insight-list \.insight-item span \{[^}]*font:\s*13px/);
+  assert.match(css, /\.insight-list \.insight-item b \{[^}]*font-size:\s*14px/);
+  assert.match(css, /\.project-insight > footer b \{[^}]*font-size:\s*11px/);
+  assert.match(css, /\.project-insight \{[^}]*overflow-y:\s*auto/);
+  assert.match(css, /\.project-insight > footer \{[^}]*position:\s*static[^}]*margin-top:\s*auto/);
+  assert.doesNotMatch(css, /\.player-footer > div:last-child/);
+  assert.match(css, /\.project-ribbon > span \{[^}]*font:\s*11px/);
+  assert.match(css, /\.project-ribbon button small \{[^}]*font:\s*11px/);
+  assert.match(css, /\.home-footer \{[^}]*font:\s*11px/);
+
+  await Promise.all([
+    access(new URL("../public/favicon.svg", import.meta.url)),
+    access(new URL("../public/home-scenes/product.webp", import.meta.url)),
+    access(new URL("../public/home-scenes/lifestyle.webp", import.meta.url)),
+    access(new URL("../public/home-scenes/ip.webp", import.meta.url)),
+    access(new URL("../public/home-scenes/system.webp", import.meta.url)),
+    access(new URL("../public/home-scenes/lab.webp", import.meta.url)),
+    access(new URL("../public/og-reference.png", import.meta.url)),
+    access(new URL("../public/works/aigc/item-01-video-01.mp4", import.meta.url)),
+    access(new URL("../public/home-preview-poster.webp", import.meta.url)),
+    access(new URL("../public/intro-portrait-clean-v3.png", import.meta.url)),
+    access(new URL("../public/intro-cover-default-final-v2.png", import.meta.url)),
+    access(new URL("../public/intro-portrait-clean-v3-lossless.webp", import.meta.url)),
+    access(new URL("../public/intro-cover-default-final-v2-lossless.webp", import.meta.url)),
+    access(new URL("../public/intro-cover-lit-compact-fixed.png", import.meta.url)),
+    access(new URL("../public/music/gearhead-kevin-macleod.mp3", import.meta.url)),
+    access(new URL("../public/music/video-original-track.m4a", import.meta.url)),
+    access(new URL("../public/music/dd-groove-kevin-macleod.mp3", import.meta.url)),
+    access(new URL("../public/music/bummin-on-tremelo-kevin-macleod.mp3", import.meta.url)),
+  ]);
+});
