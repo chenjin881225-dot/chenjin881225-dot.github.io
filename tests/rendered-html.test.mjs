@@ -98,9 +98,9 @@ test("keeps the case player, accessibility, and assets wired", async () => {
   assert.match(page, /pendingDeepLinkProjectRef\.current = project\.id/);
   assert.doesNotMatch(page, /chooseDisciplineOnHover/);
   assert.doesNotMatch(page, /onPointerEnter=\{\(\) => chooseDiscipline\(item\)\}/);
-  assert.match(page, /intro-tools-repair/);
-  assert.match(page, /tool-sd/);
-  assert.match(page, /tool-capcut/);
+  assert.match(page, /intro-cover-default\.jpg/);
+  assert.match(page, /intro-cover-lit\.jpg/);
+  assert.doesNotMatch(page, /intro-tools-repair/);
   assert.match(page, /gearhead-kevin-macleod\.mp3/);
   assert.match(page, /video-original-track\.m4a/);
   assert.match(page, /ORIGINAL VIDEO TRACK/);
@@ -135,13 +135,12 @@ test("keeps the case player, accessibility, and assets wired", async () => {
   assert.doesNotMatch(css, /\.intro-left-cleaner\s*\{/);
   assert.doesNotMatch(css, /\.intro-contours\s*\{/);
   assert.doesNotMatch(css, /\.intro-grid\s*\{/);
-  assert.match(page, /intro-cover-default-final-v2-lossless\.webp/);
+  assert.match(page, /intro-cover-default\.jpg/);
+  assert.match(page, /intro-cover-lit\.jpg/);
   assert.match(page, /loading="eager" fetchPriority="high"/);
   assert.match(css, /\.intro-profile-cover \.enter-button:focus-visible \{[^}]*outline:\s*none/);
-  assert.match(css, /\.intro-tools-repair \{[^}]*left:\s*calc\(50vw - 54\.3vh\)[^}]*top:\s*83vh/);
-  assert.match(css, /\.intro-tool-tile \{[^}]*overflow:\s*hidden[^}]*border:/);
-  assert.match(css, /\.gemini-mark/);
-  assert.match(css, /\.mj-wave/);
+  assert.doesNotMatch(css, /\.intro-tools-repair/);
+  assert.doesNotMatch(css, /\.intro-tool-tile/);
   assert.doesNotMatch(page, /intro-cover-lit-compact-fixed\.png/);
   assert.match(page, /--intro-px/);
   assert.doesNotMatch(page, /intro-scan/);
@@ -409,10 +408,9 @@ test("keeps the case player, accessibility, and assets wired", async () => {
     access(new URL("../public/works/aigc/item-01-video-01.mp4", import.meta.url)),
     access(new URL("../public/home-preview-poster.webp", import.meta.url)),
     access(new URL("../public/intro-portrait-clean-v3.png", import.meta.url)),
-    access(new URL("../public/intro-cover-default-final-v2.png", import.meta.url)),
+    access(new URL("../public/intro-cover-default.jpg", import.meta.url)),
     access(new URL("../public/intro-portrait-clean-v3-lossless.webp", import.meta.url)),
-    access(new URL("../public/intro-cover-default-final-v2-lossless.webp", import.meta.url)),
-    access(new URL("../public/intro-cover-lit-compact-fixed.png", import.meta.url)),
+    access(new URL("../public/intro-cover-lit.jpg", import.meta.url)),
     access(new URL("../public/music/gearhead-kevin-macleod.mp3", import.meta.url)),
     access(new URL("../public/music/video-original-track.m4a", import.meta.url)),
     access(new URL("../public/music/dd-groove-kevin-macleod.mp3", import.meta.url)),

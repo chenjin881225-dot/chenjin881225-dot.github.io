@@ -885,10 +885,10 @@ export default function Home() {
       {introVisible && (
         <section className={`intro-screen${introLeaving ? " leaving" : ""}`} aria-label="进入陈琎作品集" onPointerMove={onIntroPointerMove} onPointerLeave={resetIntroHighlight}>
           <div className="intro-backdrop" aria-hidden="true">
-            <img src="/intro-cover-default-final-v2-lossless.webp" alt="" loading="eager" fetchPriority="high" />
+            <img src="/intro-cover-default.jpg" alt="" loading="eager" fetchPriority="high" />
           </div>
           <div className="intro-subject-layer" aria-hidden="true">
-            <img src="/intro-cover-default-final-v2-lossless.webp" alt="" loading="eager" fetchPriority="high" />
+            <img src="/intro-cover-lit.jpg" alt="" loading="eager" fetchPriority="high" />
           </div>
           <div className="intro-profile-cover">
             <span className="sr-only">CHEN。SELF-INTRODUCTION。Hi.I am CHEN. 陈琎，设计管理 / AIGC。AI CREATIVE DIRECTOR / DESIGN MANAGER。Creative software and AI skills。</span>
@@ -896,21 +896,6 @@ export default function Home() {
               <strong>ENTER 进入作品集</strong>
               <b>→</b>
             </button>
-          </div>
-          <div className="intro-tools-repair" aria-hidden="true">
-            <span className="intro-tool-tile tool-sd"><i>SD</i></span>
-            <span className="intro-tool-tile tool-capcut">
-              <svg viewBox="0 0 24 24"><path d="M4 7h4l12 10h-4L4 7Z" /><path d="M4 17h4L20 7h-4L4 17Z" /></svg>
-            </span>
-            <span className="intro-tool-tile tool-gemini"><i className="gemini-mark" /></span>
-            <span className="intro-tool-tile tool-midjourney">
-              <svg viewBox="0 0 64 64">
-                <path d="M31 8v33" className="mj-mast" />
-                <path d="M29.5 11 13 38h16.5Z" className="mj-sail-a" />
-                <path d="m33.5 15 17 23h-17Z" className="mj-sail-b" />
-                <path d="M11 43c6 4 11-4 17 0s11-4 17 0 9-2 9-2M12 49c6 4 11-4 17 0s11-4 17 0 8-2 8-2" className="mj-wave" />
-              </svg>
-            </span>
           </div>
           <footer className="intro-footer">
             <span className="intro-footer-note">*除真实头像外，本作品集中的多维跨界形象系结合个人经历，通过 AIGC 辅助进行的视觉呈现。AI 负责打破物理层面的形式边界，</span>

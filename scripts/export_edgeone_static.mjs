@@ -23,8 +23,6 @@ const unusedAssets = new Set([
   "intro-cover-lit-hq.jpg",
   "intro-cover-default-hq.jpg",
   "intro-cover.jpg",
-  "intro-cover-lit.jpg",
-  "intro-cover-default.jpg",
 ]);
 
 await rm(outputRoot, { recursive: true, force: true });
