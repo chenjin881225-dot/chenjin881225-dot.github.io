@@ -1098,3 +1098,95 @@ a:focus-visible,
   .insight-list .insight-item { min-height: 76px; padding-block: 12px; }
   .project-insight > footer { padding-top: 14px; }
 }
+
+/* Laptop desktop layout: 1920px displays often expose a 1280px CSS viewport at 150% scaling. */
+@media (min-width: 1051px) and (max-width: 1500px) {
+  .impact-title { left: 24%; top: 1.8%; width: 51%; }
+  .impact-title span { font-size: clamp(104px, 9vw, 135px); line-height: .72; }
+  .impact-title span:last-child { width: 104%; margin: -5px 0 0 7%; font-size: clamp(70px, 6.2vw, 93px); line-height: .68; }
+  .floating-disciplines { left: 16px; top: 9.5%; width: 220px; }
+  .aside-label { margin-bottom: 12px; font-size: 10px; }
+  .floating-disciplines button,
+  .floating-disciplines button:nth-of-type(n) { min-height: 62px; padding: 8px 4px; grid-template-columns: 38px 1fr; translate: 0; rotate: 0deg; }
+  .floating-disciplines button > span,
+  .floating-disciplines button b { font-size: 18px; }
+  .floating-disciplines button small { font-size: 9px; }
+  .floating-disciplines button small em { margin-left: 6px; }
+  .floating-disciplines button:hover,
+  .floating-disciplines button.active { translate: 8px 0; rotate: 0deg; }
+  .visual-theatre { left: 24%; top: 16%; width: 52%; height: 62%; }
+  .home-video-preview { right: 22px; top: 13%; width: 210px; }
+  .impact-brief { right: 16px; top: 47%; bottom: 8%; width: 280px; }
+  .brief-heading h1 { margin-block: 14px 10px; font-size: clamp(46px, 4vw, 56px); }
+  .impact-summary { margin: 14px 0 16px; font-size: 13px; line-height: 1.65; }
+  .impact-action { padding-top: 10px; }
+  .impact-action > p { margin-bottom: 9px; font-size: 10px; }
+  .impact-action button { min-height: 50px; }
+  .project-ribbon,
+  .project-ribbon.is-collection { left: 2.5%; top: auto; bottom: 5%; width: 205px; gap: 8px; }
+  .project-ribbon button,
+  .project-ribbon.is-collection button { min-height: 60px; padding: 10px 12px 9px 16px; }
+  .project-ribbon button b { font-size: 14px; }
+  .project-ribbon button small { margin-top: 6px; font-size: 9px; }
+  .sound-orbit { left: 18%; bottom: 5%; width: 108px; }
+  .chapter-period { display: none; }
+
+  .case-player { grid-template-rows: 64px minmax(0, 1fr) 40px; }
+  .player-header { padding-inline: 16px 18px; }
+  .player-main { grid-template-columns: 140px minmax(0, 1fr) 320px; }
+  .chapter-nav { padding: 22px 8px 16px; }
+  .chapter-nav-heading { top: 26px; left: 18px; }
+  .chapter-nav-heading b { font-size: 18px; }
+  .chapter-nav button { min-height: 72px; padding: 11px 8px; grid-template-columns: 30px 1fr 3px; }
+  .chapter-nav button span { font-size: 11px; }
+  .chapter-nav button b em { font-size: 13px; }
+  .chapter-nav button b small { font-size: 9px; }
+  .chapter-nav > p { left: 16px; bottom: 18px; }
+  .chapter-nav > p span { font-size: 24px; }
+  .slide-canvas { padding: 22px 10px 12px; grid-template-rows: auto minmax(0, 1fr) 78px; gap: 6px; }
+  .slide-copy { min-height: 68px; padding-left: 20px; }
+  .slide-copy > span { font-size: 9px; }
+  .slide-copy h2 { margin-top: 11px; font-size: clamp(30px, 2.5vw, 36px); }
+  .carousel-controls { left: 26%; right: 26%; bottom: -66px; }
+  .carousel-controls > button { width: 52px; height: 52px; }
+  .stage-caption { width: min(56%, 500px); min-height: 60px; padding: 8px 14px; }
+  .stage-caption span { font-size: 10px; }
+  .stage-caption p { margin-top: 6px; font-size: 13px; line-height: 1.5; }
+  .project-insight { padding: 18px; }
+  .insight-core { margin: 0; padding-block: 18px; }
+  .insight-core > header { padding-bottom: 14px; }
+  .insight-core > header > span { font-size: 10px; }
+  .insight-core > header b { font-size: 42px; }
+  .insight-intro { padding-block: 18px; }
+  .insight-intro h3 { font-size: clamp(32px, 2.8vw, 38px); }
+  .insight-intro p { margin-top: 14px; font-size: 14px; line-height: 1.55; }
+  .insight-list .insight-item { min-height: 66px; padding-block: 10px; }
+  .insight-list .insight-item span { font-size: 11px; }
+  .insight-list .insight-item b { margin-top: 5px; font-size: 13px; line-height: 1.45; }
+  .project-insight > footer { padding-top: 12px; }
+  .project-insight > footer div { margin-top: 9px; }
+  .project-insight > footer b { padding: 7px 9px; font-size: 11px; }
+}
+
+/* The entrance artwork contains its own type, so move the independent CTA below it on short screens. */
+@media (min-width: 581px) and (max-height: 720px) {
+  .intro-profile-cover { bottom: 19vh; }
+  .intro-footer { bottom: 10px; }
+  .intro-footer .intro-footer-note { font-size: 10px; line-height: 1.35; }
+  .case-player { grid-template-rows: 56px minmax(0, 1fr) 34px; }
+  .player-main { grid-template-columns: 128px minmax(0, 1fr) 290px; }
+  .player-project > div span { display: none; }
+  .chapter-nav button { min-height: 60px; }
+  .slide-canvas { padding-top: 16px; grid-template-rows: auto minmax(0, 1fr) 62px; }
+  .slide-copy { min-height: 56px; }
+  .slide-copy h2 { font-size: 28px; }
+  .carousel-controls { bottom: -54px; }
+  .carousel-controls > button { width: 46px; height: 46px; }
+  .stage-caption { min-height: 52px; padding-block: 6px; }
+  .project-insight { padding: 14px 16px; }
+  .insight-core { padding-block: 10px; }
+  .insight-intro { padding-block: 12px; }
+  .insight-intro h3 { font-size: 30px; }
+  .insight-intro p { margin-top: 10px; font-size: 12px; }
+  .insight-list .insight-item { min-height: 56px; padding-block: 7px; }
+}
